@@ -20,6 +20,9 @@ unsigned char value2 = 0;
 unsigned char value3 = 0;
 unsigned char value4 = 0;
 
+static int value = 0;
+static int check_black = 0;
+
 
 /*int	get_L_F1(){//测qti状态函数
    return (P0 & 0X40);
@@ -30,14 +33,14 @@ int get_R_F1(){
 }*/
 
 int filter_L_B1(){//消抖滤波函数
-    char count=0;
-	char new_value;
+    unsigned char count=0;
+	unsigned char new_value;
 	new_value = L_B1;
 	while (value4 !=new_value){
 	count++;
 	if (count>=N)
 	  return new_value;
-	delay_nus(100);
+	delay_nus(50);
 	new_value = L_B1;
    }
    return value4;
@@ -65,7 +68,7 @@ int filter_L_F3(){//左上qti消抖滤波函数
 	count++;
 	if (count>=N)
 	  return new_value;
-	delay_nus(100);
+	delay_nus(50);
 	new_value = L_F3;
    }
    return value2;
@@ -79,7 +82,7 @@ int filter_R_F3(){//右上qti消抖滤波函数
 	count++;
 	if (count>=N)
 	  return new_value;
-	delay_nus(100);
+	delay_nus(50);
 	new_value = R_F3;
    }
    return value3;
@@ -143,8 +146,8 @@ if((L_F1 == 1) && (R_F1 == 1)){
 } 
 
 void route_ccw(){ //左转
-	static int value = 0;
-	static int check_black = 0;
+    value = 0;
+	check_black = 0;
 	value = filter_R_F3();
 	while(1){
 	     motor_ccw();
@@ -161,8 +164,8 @@ void route_ccw(){ //左转
 }
 
 void route_cw(){	//右转
-    static int value = 0;
-	static int check_black = 0;
+     value = 0;
+	 check_black = 0;
 	value = filter_L_F3();
 	while(1){
 	     motor_cw();
@@ -194,8 +197,8 @@ void place_wedges(){ //放物块
 
 
 void car_go(){	//出发
-	static int value = 0;
-	static int check_black = 0;
+	 value = 0;
+	 check_black = 0;
 	value = filter_R_B1();
 	while(1){
 	     route_track();
@@ -232,10 +235,10 @@ void car_stop(unsigned int i){//微停_毫秒
 	}
 }
 
-void car_adjustR(){ //调整车身
+void car_adjustL(){ //调整车身
 	while(1){
 		 motor_speed(1);
-		 motor_cw();
+		 motor_ccw();
 		 if(L_B1 == 1){
 		   delay_nms(20);
 		   if(L_B1 == 1){
@@ -245,10 +248,10 @@ void car_adjustR(){ //调整车身
 	}
 }
 
-void car_adjustL(){ //调整车身
+void car_adjustR(){ //调整车身
 	while(1){
 		 motor_speed(1);
-		 motor_ccw();
+		 motor_cw();
 		 if(L_B1 == 1){
 		   delay_nms(200);
 		   if(L_B1 == 1){
@@ -257,8 +260,7 @@ void car_adjustL(){ //调整车身
 		 }
 	}
 }
-
-void car_circle(unsigned char direction,unsigned char degree){//转角度选择函数
+/*void car_circle(unsigned char direction,unsigned char degree){//转角度选择函数
 
 	if(direction == 1){
 	  switch(degree){
@@ -300,43 +302,42 @@ void car_circle(unsigned char direction,unsigned char degree){//转角度选择函数
 			    
 	  }
 	}
-}
+} */
 
-/*void car_crossL(){
-	static int value = 0;
-	static int check_black = 0;
-	value = filter_R_F3();
-	while(1){
-		 motor_forward();
-		 motor_speed(1);
-		 if(value != filter_L_F3()){
+void car_crossL(){
+   value = 0;
+   check_black = 0;
+   value = filter_R_F3();
+	 while(1){
+	       motor_forward();
+		   motor_speed(1);
+		   if(value != filter_R_F3()){
+		   value = filter_R_F3();
+		   check_black++; 
+		   }
+		   if(check_black == 2){
+		     check_black = 0;
+		     break;
+		 }
+	}
+	car_stop(1000);
+} 
+
+
+void car_crossR(){//右方越线函数
+	 value = 0;
+	 check_black = 0;
+	 value = filter_L_F3();
+	 while(1){
+	       motor_forward();
+		   motor_speed(1);
+		   if(value != filter_L_F3()){
 		   value = filter_L_F3();
 		   check_black++; 
 		   }
 		   if(check_black == 2){
-		        check_black = 0;
-		         break;
-		 }
-
-	}
-	car_stop(1000);
-} */
-
-
-void car_crossR(){//右方越线函数
-		 static int value = 0;
-	     static int check_black = 0;
-	     value = filter_L_F3();
-	     while(1){
-	          motor_forward();
-		      motor_speed(1);
-		      if(value != filter_L_F3()){
-		      value = filter_L_F3();
-		      check_black++; 
-		   }
-		      if(check_black == 2){
-		        check_black = 0;
-		         break;
+		     check_black = 0;
+		     break;
 		 }
 	}
 	car_stop(1000);
@@ -404,7 +405,7 @@ void check_white(){
 		      value = filter_L_B1();
 		      check_white++; 
 		   }
-		      if(check_white == 2){
+		      if(check_white == 1){
 		        check_white = 0;
 		         break;
 		 }
